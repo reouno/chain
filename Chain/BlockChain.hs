@@ -31,7 +31,9 @@ main = do
     print . show $ currentT
     print . DU.formatUnixTimeGMT DU.webDateFormat $ currentT
     print genesisBlock
-    print $ calculateHash (index genesisBlock, previousHash genesisBlock, timestamp genesisBlock, blockData genesisBlock)
+    putStr "hash value of the first block: "
+    let firstHash = calculateHash (index genesisBlock, previousHash genesisBlock, timestamp genesisBlock, blockData genesisBlock)
+    print (DB16.encode firstHash, firstHash)
     currentT' <- DU.getUnixTime
     let block2 = generateNextBlock genesisBlock "This is the new data." currentT'
     print block2
@@ -50,7 +52,7 @@ genesisBlock = Block {
                      , previousHash = "0"
                      , timestamp = DU.UnixTime 1 0
                      , blockData = "First block data"
-                     , thisHash = "a25fb5f5c022a89cac86fa0938233943eee01456bfc37505d57a2041242ae01e"
+                     , thisHash = "be557446cdc5d70b9d70793eeaab7fedb340aa06fee773f374705e82878deb86"
                        }
 
 data Block = Block {
@@ -69,7 +71,7 @@ type BlockData = DB.ByteString
 
 
 calculateHash :: (Index, Hash256, Time, BlockData) -> DB.ByteString
-calculateHash (i, h, t, d) = SHA256.hash s
+calculateHash (i, h, t, d) = SHA256.hash . SHA256.hash $ s
     where
         s = DL.foldl' DB.append "" l
         l = [ DT.encodeUtf8 . DT.pack . show $ i
